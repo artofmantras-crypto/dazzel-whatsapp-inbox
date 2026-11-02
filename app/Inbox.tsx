@@ -79,10 +79,6 @@ export default function Inbox() {
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/conversations', { cache: 'no-store' });
-      if (res.status === 401) {
-        window.location.href = '/login';
-        return;
-      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load conversations');
       setConvs(data.conversations || []);
@@ -143,11 +139,6 @@ export default function Inbox() {
     });
   }, [convs, query, filter, unreadCount]);
 
-  async function logout() {
-    await fetch('/api/logout', { method: 'POST' }).catch(() => null);
-    window.location.href = '/login';
-  }
-
   return (
     <div className={`shell ${current ? 'has-chat' : ''}`}>
       <header className="topbar">
@@ -160,7 +151,6 @@ export default function Inbox() {
         </div>
         <div className="topbar-actions">
           <button className="btn-ghost" onClick={() => { load(); showToast('Refreshed'); }}>Refresh</button>
-          <button className="btn-ghost" onClick={logout}>Sign out</button>
         </div>
       </header>
 
