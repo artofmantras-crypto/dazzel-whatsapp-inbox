@@ -1,5 +1,6 @@
 // Customer names and order status from the n8n agent (which reads the Payments Google Sheet).
 import 'server-only';
+import { getConfig } from '@/lib/config';
 
 export type ContactInfo = {
   name: string;
@@ -12,8 +13,7 @@ export type ContactInfo = {
 export const digits = (s: string) => String(s || '').replace(/\D/g, '');
 
 export async function loadContacts(): Promise<Record<string, ContactInfo>> {
-  const url = process.env.N8N_CONTACTS_URL;
-  const key = process.env.N8N_CONTACTS_KEY;
+  const { n8nUrl: url, n8nKey: key } = await getConfig();
   if (!url || !key) return {};
   try {
     const res = await fetch(`${url}?key=${encodeURIComponent(key)}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) });

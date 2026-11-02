@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import TopBar from './TopBar';
 import type { Conversation, Message, TemplateInfo } from '@/lib/types';
 
 type Filter = 'all' | 'unread' | 'WAITING_FOR_FILES' | 'FILES_RECEIVED' | 'none';
@@ -63,6 +65,7 @@ export default function Inbox() {
   const [driveRoot, setDriveRoot] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -80,6 +83,7 @@ export default function Inbox() {
     try {
       const res = await fetch('/api/conversations', { cache: 'no-store' });
       const data = await res.json();
+      setNeedsSetup(!!data.needsSetup);
       if (!res.ok) throw new Error(data.error || 'Could not load conversations');
       setConvs(data.conversations || []);
       setDriveRoot(data.driveRoot || '');
@@ -141,18 +145,9 @@ export default function Inbox() {
 
   return (
     <div className={`shell ${current ? 'has-chat' : ''}`}>
-      <header className="topbar">
-        <div className="brand">
-          <img src="/logo.jpg" alt="" />
-          <div>
-            <div className="brand-title">WhatsApp</div>
-            <div className="brand-sub">Two-way conversations with Dazzel Digital customers. Newest at the top.</div>
-          </div>
-        </div>
-        <div className="topbar-actions">
-          <button className="btn-ghost" onClick={() => { load(); showToast('Refreshed'); }}>Refresh</button>
-        </div>
-      </header>
+      <TopBar>
+        <button className="btn-ghost" onClick={() => { load(); showToast('Refreshed'); }}>Refresh</button>
+      </TopBar>
 
       <div className="panes">
         {/* Conversation list */}
@@ -178,7 +173,14 @@ export default function Inbox() {
           </div>
           <div className="list">
             {!loaded && <div className="list-empty">Loading conversations…</div>}
-            {loaded && loadError && <div className="list-empty error">{loadError}</div>}
+            {loaded && needsSetup && (
+              <div className="list-empty setup">
+                <b>Connect your Twilio account</b>
+                <span>Add your Account SID, Auth Token and WhatsApp number once — then chats appear here.</span>
+                <Link className="btn-primary" href="/settings">Open Settings</Link>
+              </div>
+            )}
+            {loaded && loadError && !needsSetup && <div className="list-empty error">{loadError}</div>}
             {loaded && !loadError && visible.length === 0 && <div className="list-empty">No conversations</div>}
             {visible.map((c) => {
               const last = c.messages[c.messages.length - 1];
@@ -375,7 +377,7 @@ function Composer({
     fetch('/api/templates')
       .then((r) => r.json())
       .then((d) => {
-        const list: TemplateInfo[] = d.templates || [];
+        const list: TemplateInfo[] = (d.templates || []).filter((t: TemplateInfo) => t.status === 'approved');
         setTemplates(list);
         const preferred = list.find((t) => /team_message/.test(t.name)) || list[0];
         if (preferred) setTplSid(preferred.sid);
@@ -462,7 +464,7 @@ function Composer({
       ) : (
         <div className="tpl">
           {!templates && <div className="muted">Loading approved templates…</div>}
-          {templates && templates.length === 0 && <div className="muted">No approved WhatsApp templates found in Twilio yet.</div>}
+          {templates && templates.length === 0 && <div className="muted">No approved templates yet. Create one on the <Link href="/templates">Templates</Link> page.</div>}
           {templates && templates.length > 0 && (
             <>
               <select value={tplSid} onChange={(e) => setTplSid(e.target.value)}>

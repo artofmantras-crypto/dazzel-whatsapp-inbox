@@ -6,23 +6,17 @@ A team inbox for Dazzel Digital's customer chats on WhatsApp, sent through Twili
 - reply with free text within 24 hours of the customer's last message
 - send an approved template at any time
 
-## Environment variables (Vercel → Settings → Environment Variables)
+## Setup
 
-| Name | Value |
-|---|---|
-| TWILIO_ACCOUNT_SID | Twilio Account SID (AC…) |
-| TWILIO_AUTH_TOKEN | Twilio Auth Token |
-| TWILIO_WHATSAPP_FROM | +18208993837 |
-| DASHBOARD_PASSWORD | Team password used to sign in |
-| SESSION_SECRET | Any long random string |
-| N8N_CONTACTS_URL | URL of the n8n `dazzel-inbox-data` webhook (customer names and status from the sheet) |
-| N8N_CONTACTS_KEY | Key for that webhook |
-| DRIVE_ROOT_URL | Link to the "AI Avatar Files" Drive folder |
+Open the app → **Settings** and enter your Twilio Account SID, Auth Token and WhatsApp number. They are checked with Twilio and saved securely in that browser. Each team member does this once on their own device.
+
+**Templates** lets you create WhatsApp templates, send them for approval and track their status. Approved templates show up in the chat's Template tab.
+
+Optionally, the same values can be set as Vercel environment variables instead (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, N8N_CONTACTS_URL, N8N_CONTACTS_KEY, DRIVE_ROOT_URL).
 
 ## Running locally
 
 ```
 npm install
-cp .env.example .env.local   # fill in the values
 npm run dev
 ```

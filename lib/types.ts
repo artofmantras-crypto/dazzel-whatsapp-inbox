@@ -25,7 +25,11 @@ export type TemplateInfo = {
   sid: string;
   name: string;
   body: string;
+  language: string;
   variables: string[];
   sample: Record<string, string>;
   category: string;
+  status: string;
+  reason: string;
+  createdAt: string;
 };

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { listMessages } from '@/lib/twilio';
+import { getConfig, NotConfiguredError } from '@/lib/config';
 import { loadContacts, digits } from '@/lib/contacts';
 import type { Conversation, Message } from '@/lib/types';
 
@@ -10,7 +11,8 @@ const DAY = 24 * 60 * 60 * 1000;
 export async function GET() {
   try {
     const [msgs, contacts] = await Promise.all([listMessages(), loadContacts()]);
-    const ours = digits(process.env.TWILIO_WHATSAPP_FROM || '');
+    const cfg = await getConfig();
+    const ours = digits(cfg.from);
     const byPhone = new Map<string, Message[]>();
 
     for (const m of msgs) {
@@ -51,8 +53,9 @@ export async function GET() {
     });
     conversations.sort((a, b) => b.lastAt.localeCompare(a.lastAt));
 
-    return NextResponse.json({ conversations, driveRoot: process.env.DRIVE_ROOT_URL || '' });
+    return NextResponse.json({ conversations, driveRoot: cfg.driveRoot });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    const needsSetup = e instanceof NotConfiguredError;
+    return NextResponse.json({ error: (e as Error).message, needsSetup }, { status: needsSetup ? 428 : 500 });
   }
 }
