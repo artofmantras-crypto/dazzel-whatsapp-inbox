@@ -179,6 +179,9 @@ export default function TemplatesPage() {
                     </div>
                     <div className="bubble-preview">{t.body}</div>
                     {t.reason && <div className="note bad small">Reason: {t.reason}</div>}
+                    {t.category === 'MARKETING' && t.status === 'approved' && (
+                      <div className="note warn small">WhatsApp classed this as Marketing. Marketing messages are often held back for Indian numbers (error 63049) — for order updates and reminders use a Utility template.</div>
+                    )}
                     {!t.reason && st.help && t.status !== 'approved' && <div className="muted small">{st.help}</div>}
                     <div className="tpl-foot">
                       {t.status === 'approved' && <span className="ok-text">✓ Ready to use in chats</span>}
@@ -323,7 +326,7 @@ function NewTemplate({ onDone }: { onDone: (name: string) => void }) {
       </div>
 
       <ul className="tips muted small">
-        <li>Utility templates are approved faster and cost less — keep them about the customer’s order.</li>
+        <li>Utility templates are approved faster, cost less and are delivered reliably — keep them about the customer’s order. WhatsApp may switch a template to Marketing if it sounds promotional; Marketing messages are often blocked for Indian numbers.</li>
         <li>Don’t start or end the message with a blank, and avoid words like “offer”, “discount” in Utility.</li>
       </ul>
 

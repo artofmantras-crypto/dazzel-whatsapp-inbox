@@ -9,7 +9,7 @@ type Filter = 'all' | 'unread' | 'WAITING_FOR_FILES' | 'FILES_RECEIVED' | 'none'
 
 const ERRORS: Record<string, string> = {
   '63016': 'Not delivered: customer has not messaged in 24 hours. Use a template.',
-  '63049': 'Not delivered: WhatsApp held back this marketing-type message.',
+  '63049': 'Not delivered: WhatsApp blocked this Marketing template for this customer. Send a Utility template instead.',
   '63024': 'Not delivered: invalid recipient.',
   '63003': 'Not delivered: number is not on WhatsApp.',
   '63032': 'Not delivered: customer blocked or opted out.',
@@ -429,6 +429,7 @@ function Composer({
     }
   }
 
+  const missing = tpl ? tpl.variables.filter((k) => !(vars[k] || '').trim()) : [];
   const preview = tpl ? tpl.body.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] || `{{${k}}}`) : '';
 
   return (
@@ -472,6 +473,7 @@ function Composer({
                   <option key={t.sid} value={t.sid}>
                     {t.name}
                     {t.category ? ` · ${t.category.toLowerCase()}` : ''}
+                    {t.category === 'MARKETING' ? ' ⚠️ often blocked' : ''}
                   </option>
                 ))}
               </select>
@@ -482,7 +484,7 @@ function Composer({
                       <span>{`{{${k}}}`}</span>
                       <input
                         value={vars[k] || ''}
-                        placeholder={tpl.sample[k] || (k === '1' ? 'Name' : 'Your message')}
+                        placeholder={k === '1' ? 'Customer name' : `Type here, e.g. ${tpl.sample[k] || 'your update'}`}
                         onChange={(e) => setVars({ ...vars, [k]: e.target.value })}
                       />
                     </label>
@@ -491,7 +493,11 @@ function Composer({
               )}
               <div className="preview">{preview}</div>
               <div className="tpl-actions">
-                <button className="btn-primary send" onClick={sendTemplate} disabled={busy || !tpl}>
+                {tpl?.category === 'MARKETING' && (
+                  <span className="tpl-warn">WhatsApp treats this as a Marketing message and often blocks it for Indian numbers (error 63049). Use a Utility template like dazzel_team_message instead.</span>
+                )}
+                {missing.length > 0 && <span className="tpl-warn">Fill in {missing.map((k) => `{{${k}}}`).join(', ')} first</span>}
+                <button className="btn-primary send" onClick={sendTemplate} disabled={busy || !tpl || missing.length > 0}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l.01 6.6L15 12 3.01 13.9 3 20.5Z" /></svg>
                   Send template
                 </button>

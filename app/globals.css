@@ -252,3 +252,8 @@ a.btn-primary { text-decoration: none; }
   .form-row { grid-template-columns: 1fr; gap: 0; }
   .tpl-grid { grid-template-columns: 1fr; }
 }
+
+.tpl-actions { align-items: center; gap: 12px; flex-wrap: wrap; }
+.tpl-warn { color: var(--amber); font-size: 12.5px; margin-right: auto; }
+.vars input::placeholder { color: #a3adb8; font-style: italic; }
+.note.warn { background: #fef3c7; color: #92400e; }
