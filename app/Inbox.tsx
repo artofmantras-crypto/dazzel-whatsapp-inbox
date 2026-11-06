@@ -17,6 +17,13 @@ const ERRORS: Record<string, string> = {
   '11751': 'File over 16 MB — it never reached us. Ask the customer to resend it smaller.',
 };
 
+const QUICK = [
+  { label: 'Files reminder', text: 'we are still waiting for your photos, videos and voice recording to start creating your AI Avatar. Please share them here whenever you are ready' },
+  { label: 'Files received', text: 'we have received your files and our team has started working on your AI Avatar sample' },
+  { label: 'Need clearer photos', text: 'some of your photos are not clear enough. Please send 2-4 clear, recent photos with your face visible and no filters' },
+  { label: 'Sample ready', text: 'your AI Avatar sample is ready. We are sharing it with you here shortly' },
+];
+
 const STATUS_LABEL: Record<string, string> = {
   WAITING_FOR_FILES: 'Waiting for files',
   FILES_RECEIVED: 'Files received',
@@ -377,9 +384,11 @@ function Composer({
     fetch('/api/templates')
       .then((r) => r.json())
       .then((d) => {
-        const list: TemplateInfo[] = (d.templates || []).filter((t: TemplateInfo) => t.status === 'approved');
+        const list: TemplateInfo[] = (d.templates || [])
+          .filter((t: TemplateInfo) => t.status === 'approved')
+          .sort((a: TemplateInfo, b: TemplateInfo) => Number(a.category === 'MARKETING') - Number(b.category === 'MARKETING'));
         setTemplates(list);
-        const preferred = list.find((t) => /team_message/.test(t.name)) || list[0];
+        const preferred = list.find((t) => /team_message/.test(t.name)) || list.find((t) => t.category !== 'MARKETING') || list[0];
         if (preferred) setTplSid(preferred.sid);
       })
       .catch(() => setTemplates([]));
@@ -469,14 +478,33 @@ function Composer({
           {templates && templates.length > 0 && (
             <>
               <select value={tplSid} onChange={(e) => setTplSid(e.target.value)}>
-                {templates.map((t) => (
-                  <option key={t.sid} value={t.sid}>
-                    {t.name}
-                    {t.category ? ` · ${t.category.toLowerCase()}` : ''}
-                    {t.category === 'MARKETING' ? ' ⚠️ often blocked' : ''}
-                  </option>
-                ))}
+                <optgroup label="Utility — delivered reliably">
+                  {templates.filter((t) => t.category !== 'MARKETING').map((t) => (
+                    <option key={t.sid} value={t.sid}>
+                      {t.name}
+                    </option>
+                  ))}
+                </optgroup>
+                {templates.some((t) => t.category === 'MARKETING') && (
+                  <optgroup label="Marketing — often blocked by WhatsApp in India">
+                    {templates.filter((t) => t.category === 'MARKETING').map((t) => (
+                      <option key={t.sid} value={t.sid}>
+                        {t.name} ⚠️
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
+              {tpl && /team_message/.test(tpl.name) && (
+                <div className="quick">
+                  <span>Quick fill:</span>
+                  {QUICK.map((q) => (
+                    <button key={q.label} type="button" className="chip" onClick={() => setVars((v) => ({ ...v, '2': q.text }))}>
+                      {q.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {tpl && tpl.variables.length > 0 && (
                 <div className="vars">
                   {tpl.variables.map((k) => (

@@ -257,3 +257,4 @@ a.btn-primary { text-decoration: none; }
 .tpl-warn { color: var(--amber); font-size: 12.5px; margin-right: auto; }
 .vars input::placeholder { color: #a3adb8; font-style: italic; }
 .note.warn { background: #fef3c7; color: #92400e; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); }
